@@ -38,7 +38,7 @@ public class HashTableSeparateChaining<K, V> {
     // Changing load factor
     private double maxLoadFactor;
 
-    // Capacity is the number of buckets the LinkedList can hold
+    // Capacity is the number of buckets the hash table can hold
     private int capacity = 0;
 
     // Threshold tells us to resize when it reaches a certain value
@@ -74,21 +74,21 @@ public class HashTableSeparateChaining<K, V> {
     }
 
     /*
-     * Returns true if the hash table is empty, otherwise, false
+    * Returns true if the hash table is empty, otherwise, false
     */
     public boolean isEmpty() {
         return size == 0;
     }
 
     /*
-     * Returns the size of the hash table
+    * Returns the size of the hash table
     */
     public int size() {
         return size;
     }
 
     /*
-     * Returns the hash value within 1 to N-1
+    * Returns the hash value within 1 to N-1
     */
     private int normalizeIndex(int keyHash) {
         // 0x7FFFFFFF strips off the negative sign
@@ -110,6 +110,15 @@ public class HashTableSeparateChaining<K, V> {
     public boolean hasKey(K key) {
         int bucketIndex = normalizeIndex(key.hashCode());
         return bucketSeekEntry(bucketIndex, key) != null;
+    }
+
+    /*
+    * Returns the old value and modifies the old value with the specfied value if
+    * the key is already present Otherwise, returns null and adds the new key-value
+    * if the key is not present.
+    */
+    public V put(K key, V value) {
+        return insert(key, value);
     }
 
     /*
