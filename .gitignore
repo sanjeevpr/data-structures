@@ -6,7 +6,6 @@
 local.properties
 .settings/
 .loadpath
-zwayam/.recommenders/ 
 # External tool builders
 .externalToolBuilders/
  
@@ -24,7 +23,9 @@ zwayam/.recommenders/
  
 # TeXlipse plugin
 .texlipse
- 
+
+# Code
+*.code-workspace 
  
 ### Gradle ###
 .gradle
