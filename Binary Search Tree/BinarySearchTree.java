@@ -94,7 +94,7 @@ public class BinarySearchTree<T extends Comparable<T>> {
 
          // Dig the left subtree if the specified data is smaller than the data in the current node.
         if(comparatorVal < 0) {
-            root.left = remove(root.left, data)
+            root.left = remove(root.left, data);
         } else if(comparatorVal > 0) {
             root.right = remove(root.right, data);
         } else {
