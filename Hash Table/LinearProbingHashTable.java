@@ -6,16 +6,30 @@ public class LinearProbingHashTable<K, V> {
     private static final int DEFAULT_CAPACITY = 3;
     private static final double DEFAUT_LOAD_FACTOR = 0.75;
 
+    // The value of a in linear probe function: ax + b
     private static final int LINEAR_CONSTANT = 13;
 
+    // Changing load factor
     private double loadFactor;
-    private int capacity, threshold;
 
-    private int usedBuckets, keyCount;
+    // Capacity is the number of key-value pairs the hash table can hold
+    private int capacity;
 
+    // Threshold tells us to resize when it reaches a certain value
+    private int threshold;
+
+    // The number of unique key-value pair in the hash table
+    private int keyCount;
+
+    // The number of buckets used by TOMBSTONE and the key-value pairs
+    private int usedBuckets;
+
+    // Array of keys of type K 
     private K[] keys;
+    // Array of values of type V 
     private V[] values;
 
+    // Represents a deleted key-value pair
     private final K TOMBSTONE = (K) new Object();
 
     public LinearProbingHashTable() {
@@ -43,21 +57,33 @@ public class LinearProbingHashTable<K, V> {
         keys = (K[]) new Object[this.capacity];
         values = (V[]) new Object[this.capacity];
     }
-
+    
+    /*
+    * Helper method which returns the next index to be probed
+    */
     private int probe(int x) {
         return LINEAR_CONSTANT * x;
     }
 
+    /*
+    * Helper method which adjust the capacity until GCD(LINEAR_CONSTANT, capacity) is equal to 1
+    */
     private void adjustCapacity() {
         while (gcd(LINEAR_CONSTANT, capacity) != 1) {
             capacity++;
         }
     }
 
+    /*
+    * Helper method which increases the capacity
+    */
     private void increaseCapacity() {
         capacity = (2 * capacity) + 1;
     }
 
+    /*
+    * Helper method which finds the GCD or Greatest Common Divisor of two numbers
+    */
     private int gcd(int a, int b) {
         if (b == 0) {
             return a;
@@ -65,10 +91,16 @@ public class LinearProbingHashTable<K, V> {
         return gcd(b, a % b);
     }
 
+    /*
+    * Returns the hash value within 1 to N-1
+    */
     private int normalizeIndex(int keyHash) {
         return (keyHash & 0x7FFFFFFF) % capacity;
     }
 
+    /*
+    * Helper method to resize the hash table with new capacity on reaching a threshold 
+    */
     private void resize() {
         increaseCapacity();
         adjustCapacity();
@@ -78,10 +110,12 @@ public class LinearProbingHashTable<K, V> {
         K[] oldKeys = (K[]) new Object[this.capacity];
         V[] oldValues = (V[]) new Object[this.capacity];
 
+        // Swap the tables
         K[] oldKeysTemp = keys;
         keys = oldKeys;
         oldKeys = oldKeysTemp;
 
+        // Swap the tables
         V[] oldValuesTemp = values;
         values = oldValues;
         oldValues = oldValuesTemp;
@@ -97,18 +131,30 @@ public class LinearProbingHashTable<K, V> {
         }
     }
 
-    public int size() {
-        return keyCount;
-    }
-
+    /*
+    * Returns true if the hash table is empty, otherwise, false
+    */
     public boolean isEmpty() {
         return keyCount == 0;
     }
 
+    /*
+    * Returns the size of the hash table
+    */
+    public int size() {
+        return keyCount;
+    }
+
+    /*
+    * Returns the capacity of the hash table
+    */
     public int getCapacity() {
         return capacity;
     }
 
+    /*
+    * Clears the hash table
+    */
     public void clear() {
         for (int i = 0; i < capacity; i++) {
             keys[i] = null;
@@ -117,19 +163,34 @@ public class LinearProbingHashTable<K, V> {
         usedBuckets = keyCount = 0;
     }
 
+    /*
+    * Returns the old value and modifies the old value with the specfied value if
+    * the key is already present Otherwise, returns null and adds the new key-value
+    * if the key is not present.
+    */
     public V put(K key, V value) {
         return insert(key, value);
     }
 
+    /*
+    * Returns the old value and modifies the old value with the specfied value if
+    * the key is already present Otherwise, returns null and adds the new key-value
+    * if the key is not present.
+    */
     public V add(K key, V value) {
         return insert(key, value);
     }
 
+    /*
+    * Returns the old value and modifies the old value with the specfied value if
+    * the key is already present Otherwise, returns null and adds the new key-value
+    * if the key is not present.
+    */
     public V insert(K key, V value) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal key");
         }
-
+        
         if (usedBuckets >= threshold) {
             resize();
         }
@@ -137,30 +198,42 @@ public class LinearProbingHashTable<K, V> {
         final int offset = normalizeIndex(key.hashCode());
 
         for (int i = offset, j = -1, x = 0;; i = normalizeIndex(offset + probe(x++))) {
+            // If we have reached a deleted node
             if (keys[i] == TOMBSTONE) {
+                // If we encountered first deleted Node
                 if (j == -1) {
+                    // Save the position in j
                     j = i;
                 }
             } else if (keys[i] != null) {
+                // If key is found
                 if (keys[i].equals(key)) {
+                    // Store of returning
                     V oldValue = values[i];
+                    // If we have not encountered any deleted nodes,
+                    // Set the value at position i
                     if (j == -1) {
                         values[i] = value;
                     } else {
+                        // Set the tombstone at the i
                         keys[i] = TOMBSTONE;
                         values[i] = null;
 
+                        // Store the new key-value in the first encounter tombstone position
                         keys[j] = key;
                         values[j] = value;
                     }
                     return oldValue;
                 }
             } else {
+                // If key is not found and we have not encountered any deleted nodes,
                 if (j == -1) {
+                    // Store the new key-value at the ith index
                     keys[i] = key;
                     values[i] = value;
                     usedBuckets++;
                 } else {
+                    // Store the new key-value in the first encounter tombstone position
                     keys[j] = key;
                     values[j] = value;
                 }
@@ -170,10 +243,16 @@ public class LinearProbingHashTable<K, V> {
         }
     }
 
+    /*
+    * Returns true if the hash table is contains the specified key, otherwise, false
+    */
     public boolean containsKey(K key) {
         return hasKey(key);
     }
-
+    
+    /*
+    * Returns true if the hash table is contains the specified key, otherwise, false
+    */
     public boolean hasKey(K key) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal key");
@@ -187,6 +266,7 @@ public class LinearProbingHashTable<K, V> {
                     j = i;
                 }
             } else if (keys[i].equals(key)) {
+                // Lazy deletion/relocation for faster look-ups
                 if (j != -1) {
                     keys[j] = keys[i];
                     values[j] = values[i];
@@ -201,6 +281,10 @@ public class LinearProbingHashTable<K, V> {
         }
     }
 
+    /*
+    * Returns the value against the specfied key if
+    * the key is found. Otherwise, returns null.
+    */
     public V get(K key) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal key");
@@ -214,6 +298,7 @@ public class LinearProbingHashTable<K, V> {
                     j = i;
                 }
             } else if (keys[i].equals(key)) {
+                // Lazy deletion/relocation for faster look-ups
                 if (j != -1) {
                     keys[j] = keys[i];
                     values[j] = values[i];
@@ -230,6 +315,10 @@ public class LinearProbingHashTable<K, V> {
         }
     }
 
+    /*
+    * Returns the value against the specfied key if
+    * the key is found. Otherwise, returns null.
+    */
     public V remove(K key) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal key");
@@ -256,6 +345,9 @@ public class LinearProbingHashTable<K, V> {
         }
     }
 
+    /* 
+    * Returns the list of keys in the hash table
+    */
     public List<K> keys() {
         List<K> keyList = new ArrayList<>();
         for (int i = 0; i < capacity; i++) {
@@ -265,6 +357,9 @@ public class LinearProbingHashTable<K, V> {
         return keyList;
     }
 
+    /* 
+    * Returns the list of values in the hash table
+    */
     public List<V> values() {
         List<V> valueList = new ArrayList<>();
         for (int i = 0; i < capacity; i++) {
@@ -274,6 +369,9 @@ public class LinearProbingHashTable<K, V> {
         return valueList;
     }
 
+    /* 
+    * Returns the String representation of the hash table
+    */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
